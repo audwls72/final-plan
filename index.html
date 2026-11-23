@@ -128,6 +128,9 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .stage .tt{flex:1;min-width:0}
 .stage .tt b{display:block;font-size:14.5px;font-weight:700}
 .stage .tt small{color:var(--dim);font-size:12px}
+.stage .tt small.ok{color:var(--good)}
+.stage .tt small.todo{color:var(--warn)}
+.card .np{position:relative;z-index:1;color:var(--sub);font-size:12px;margin-top:8px}
 .stage .act{display:flex;gap:6px;flex:none}
 .sbtn{font-size:12px;font-weight:800;padding:7px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);color:var(--sub);white-space:nowrap}
 .sbtn.on{background:var(--c);color:#06070c;border-color:transparent}
@@ -271,6 +274,7 @@ function dday(s){
 const when = s => { const d = examDate(s); return `${d.getMonth()+1}/${d.getDate()}(${DAYS[d.getDay()]}) ${s.exam.slice(11)}–${s.end}`; };
 const checks = () => store.get(LS_CHECK, {});
 const isDone = (sid, cid) => !!checks()[sid + "/" + cid];
+function noteProg(s){ const L = s.chapters.filter(c => !c.lab); const d = L.filter(c => c.noted).length; return {d, n:L.length}; }
 function progress(s){ const n = s.chapters.length; const d = s.chapters.filter(c => isDone(s.id, c.id)).length; return {d, n, p: n ? Math.round(d/n*100) : 0}; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 1400); }
@@ -323,6 +327,7 @@ function viewHome(){
         <div class="row"><div><div class="abbr">${esc(s.abbr)}</div><div class="code">${esc(s.code)} · ${esc(s.prof)}</div></div><div class="dd">${d.label}</div></div>
         <div class="when">${when(s)}<br>${s.pnr ? '<span class="pill pnr">PNR</span>' : `<span class="pill" style="background:rgba(255,255,255,.06);color:var(--sub)">${esc(s.weight)}</span>`} <span class="pill ${s.rangeStatus}">범위 ${s.rangeStatus}</span></div>
         <div class="prog"><div class="bar"><i style="width:${p.p}%"></i></div><small>${p.d}/${p.n}</small></div>
+        <div class="np">📒 정리 ${noteProg(s).d}/${noteProg(s).n}</div>
       </button>`;}).join("")}
     </div>
     <div class="alert">⚠️ 화 19:00 미2 → 수 09:00 데구 → 수 13:00 PL 연속. 데구–PL 사이 80분뿐 → 데구·PL은 12/13까지 완성!</div>
@@ -343,6 +348,7 @@ function viewSubject(id){
         <div class="chip"><b>비중</b>${esc(s.weight)}</div>
         <div class="chip"><b>범위</b><span class="pill ${s.rangeStatus}">${s.rangeStatus}</span></div>
         <div class="chip"><b>진행</b>${p.d}/${p.n} 클리어 (${p.p}%)</div>
+        <div class="chip"><b>정리</b>${noteProg(s).d}/${noteProg(s).n} 강의</div>
       </div>
     </div>
     <div class="two">
@@ -354,7 +360,7 @@ function viewSubject(id){
       const done = isDone(s.id, c.id), has = notes[c.id];
       return `<div class="stage ${done ? "clear" : ""}">
         <div class="no">${esc(c.id)}</div>
-        <div class="tt"><b>${esc(c.title)}</b><small>${has ? "노트 있음" : "노트 준비 중"}</small></div>
+        <div class="tt"><b>${esc(c.title)}</b><small class="${c.lab ? "" : c.noted ? "ok" : "todo"}">${c.lab ? "🧪 Lab" : c.noted ? "📒 정리 완료" : "⏳ 정리 필요"}</small></div>
         <div class="act">
           ${has ? `<button class="sbtn note" onclick="location.hash='#/n/${s.id}/${encodeURIComponent(c.id)}'">노트</button>` : ""}
           <button class="sbtn ${done ? "on" : ""}" onclick="toggle('${s.id}','${esc(c.id)}')">${done ? "✓ CLEAR" : "클리어"}</button>
