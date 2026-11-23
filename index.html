@@ -158,6 +158,27 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .md input[type=checkbox]{accent-color:var(--neon);margin-right:6px}
 .empty{color:var(--sub);text-align:center;padding:30px;border:1px dashed var(--line);border-radius:var(--r);font-size:14px}
 
+.notehead{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
+.notehead b{font-size:18px}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:14px;margin-bottom:12px;position:sticky;top:8px;z-index:5}
+.toc summary{cursor:pointer;padding:10px 14px;font-weight:800;font-size:13.5px;color:var(--sub)}
+.toc #tocl{max-height:55vh;overflow:auto;padding:0 10px 10px;display:flex;flex-direction:column}
+.toc a{color:var(--ink);text-decoration:none;font-size:13.5px;padding:5px 8px;border-radius:8px}
+.toc a:hover{background:var(--card2)}
+.toc a.h3{padding-left:22px;color:var(--sub);font-size:12.5px}
+.notenav{display:flex;justify-content:space-between;gap:8px;margin-top:14px}
+.libtabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.libtabs button{padding:8px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card);font-weight:800;font-size:14px;display:flex;gap:6px;align-items:center}
+.libtabs button small{font-size:11px;color:var(--sub);background:var(--bg2);border-radius:99px;padding:0 7px}
+.libtabs button.on{border-color:var(--c);box-shadow:0 0 0 1px var(--c),0 0 18px color-mix(in srgb,var(--c) 40%,transparent)}
+.liblist{display:flex;flex-direction:column;gap:8px}
+.libitem{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;text-align:left;transition:.15s}
+.libitem:not(.off):hover{border-color:var(--c);transform:translateX(3px)}
+.libitem.off{opacity:.45;cursor:default}
+.libitem .no{width:42px;height:42px;flex:none;border-radius:12px;display:grid;place-items:center;font-weight:900;font-size:13px;background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.libitem .tt{flex:1;font-weight:700;font-size:14.5px}
+.libitem .st{font-size:12px;color:var(--sub);white-space:nowrap}
+.libitem:not(.off) .st{color:var(--c);font-weight:800}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--card2);border:1px solid var(--line);
   padding:10px 16px;border-radius:12px;font-weight:800;font-size:14px;transition:.3s;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -196,7 +217,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
       <div><b>FINAL QUEST</b><small>KAIST · 2026 FALL</small></div>
     </div>
     <div style="display:flex;gap:8px;align-items:center">
-      <div class="tabs"><button data-t="home">스테이지</button><button data-t="plan">공략집</button></div>
+      <div class="tabs"><button data-t="home">스테이지</button><button data-t="lib">정리본</button><button data-t="plan">공략집</button></div>
       <button class="iconbtn" id="logout" title="잠그기">⏻</button>
     </div>
   </div>
@@ -209,7 +230,7 @@ const LS_KEY = "fq-key", LS_CHECK = "fq-check";
 const $ = s => document.querySelector(s);
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const ub64 = u => btoa(String.fromCharCode(...new Uint8Array(u)));
-let DATA = null, ENC = null;
+let DATA = null, ENC = null, KEY = null; const NOTES = {};
 
 const store = {
   get(k, d){ try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } },
@@ -221,9 +242,19 @@ async function deriveKey(pw, salt, iter){
   const base = await crypto.subtle.importKey("raw", new TextEncoder().encode(pw), "PBKDF2", false, ["deriveKey"]);
   return crypto.subtle.deriveKey({name:"PBKDF2", salt, iterations:iter, hash:"SHA-256"}, base, {name:"AES-GCM", length:256}, true, ["decrypt"]);
 }
-async function openWith(key){
-  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(ENC.iv)}, key, b64(ENC.ct));
+async function unseal(e, key){
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:b64(e.iv)}, key, b64(e.ct));
   return JSON.parse(new TextDecoder().decode(pt));
+}
+async function loadNotes(sid){
+  if (NOTES[sid]) return NOTES[sid];
+  const v = (DATA.notesVer || {})[sid] || "";
+  const e = await (await fetch(`notes/${sid}.enc?v=${v}`)).json();
+  return NOTES[sid] = await unseal(e, KEY);
+}
+const hasNote = (sid, cid) => ((DATA.notesAvailable || {})[sid] || []).includes(cid);
+async function openWith(key){
+  const d = await unseal(ENC, key); KEY = key; return d;
 }
 
 async function boot(){
@@ -257,7 +288,7 @@ $("#logout").onclick = () => { store.del(LS_KEY); location.hash = ""; location.r
 
 function start(){
   $("#lock").style.display = "none"; $("#app").style.display = "block";
-  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => location.hash = b.dataset.t === "plan" ? "#/plan" : "#/");
+  document.querySelectorAll(".tabs button").forEach(b => b.onclick = () => location.hash = b.dataset.t === "home" ? "#/" : "#/" + b.dataset.t);
   window.addEventListener("hashchange", route); route();
 }
 
@@ -291,9 +322,11 @@ function mathify(el){
 /* ---------- views ---------- */
 function route(){
   const h = location.hash.replace(/^#\/?/, "").split("/");
-  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", (h[0] === "plan") === (b.dataset.t === "plan")));
+  const tab = h[0] === "plan" ? "plan" : (h[0] === "lib" || h[0] === "n") ? "lib" : "home";
+  document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
   window.scrollTo(0, 0);
   if (h[0] === "plan") return viewPlan();
+  if (h[0] === "lib") return viewLib(h[1]);
   if (h[0] === "s" && h[1]) return viewSubject(h[1]);
   if (h[0] === "n" && h[1] && h[2]) return viewNote(h[1], decodeURIComponent(h[2]));
   viewHome();
@@ -336,7 +369,7 @@ function viewHome(){
 
 function viewSubject(id){
   const s = DATA.subjects.find(x => x.id === id); if (!s) return viewHome();
-  const d = dday(s), p = progress(s), notes = DATA.notes[id] || {};
+  const d = dday(s), p = progress(s);
   $("#view").innerHTML = `
     <button class="back" onclick="location.hash='#/'">← 스테이지 맵</button>
     <div class="shead" style="--c:${s.color}">
@@ -357,7 +390,7 @@ function viewSubject(id){
     </div>
     <div class="sectionh"><h2>🎮 STAGE LIST</h2><span>클리어 체크는 이 기기에 저장</span></div>
     <div class="stages" style="--c:${s.color}">${s.chapters.map(c => {
-      const done = isDone(s.id, c.id), has = notes[c.id];
+      const done = isDone(s.id, c.id), has = hasNote(s.id, c.id);
       return `<div class="stage ${done ? "clear" : ""}">
         <div class="no">${esc(c.id)}</div>
         <div class="tt"><b>${esc(c.title)}</b><small class="${c.lab ? "" : c.noted ? "ok" : "todo"}">${c.lab ? "🧪 Lab" : c.noted ? "📒 정리 완료" : "⏳ 정리 필요"}</small></div>
@@ -368,17 +401,49 @@ function viewSubject(id){
     </div>`;
 }
 
-function toggle(sid, cid){
+function toggle(sid, cid, inNote){
   const c = checks(), k = sid + "/" + cid;
   if (c[k]) delete c[k]; else { c[k] = 1; toast("STAGE CLEAR! +1 XP ⚡"); }
-  store.set(LS_CHECK, c); viewSubject(sid);
+  store.set(LS_CHECK, c);
+  if (inNote) { const b = document.querySelector(".notenav .sbtn:nth-child(2)"); if (b) { b.classList.toggle("on", !!c[k]); b.textContent = c[k] ? "✓ CLEAR" : "다 봤으면 클리어"; } }
+  else viewSubject(sid);
 }
 
-function viewNote(sid, cid){
-  const s = DATA.subjects.find(x => x.id === sid), n = (DATA.notes[sid] || {})[cid];
-  if (!s || !n) return viewSubject(sid);
-  $("#view").innerHTML = `<button class="back" onclick="location.hash='#/s/${sid}'">← ${esc(s.abbr)}</button><article class="md" id="mdbox"></article>`;
+async function viewNote(sid, cid){
+  const s = DATA.subjects.find(x => x.id === sid);
+  if (!s || !hasNote(sid, cid)) return viewSubject(sid);
+  const L = s.chapters.filter(c => hasNote(sid, c.id)), i = L.findIndex(c => c.id === cid);
+  const prev = L[i-1], next = L[i+1], ch = L[i];
+  const nav = `<div class="notenav" style="--c:${s.color}">
+      ${prev ? `<button class="sbtn" onclick="location.hash='#/n/${sid}/${encodeURIComponent(prev.id)}'">← ${esc(prev.id)}</button>` : "<span></span>"}
+      <button class="sbtn ${isDone(sid, cid) ? "on" : ""}" onclick="toggle('${sid}','${esc(cid)}', true)">${isDone(sid, cid) ? "✓ CLEAR" : "다 봤으면 클리어"}</button>
+      ${next ? `<button class="sbtn" onclick="location.hash='#/n/${sid}/${encodeURIComponent(next.id)}'">${esc(next.id)} →</button>` : "<span></span>"}
+    </div>`;
+  $("#view").innerHTML = `<button class="back" onclick="location.hash='#/lib/${sid}'">← ${esc(s.abbr)} 정리본</button>
+    <div class="notehead" style="--c:${s.color}"><span class="pill" style="background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)">${esc(s.abbr)} · ${esc(cid)}</span><b>${esc(ch.title)}</b></div>
+    <details class="toc" id="toc"><summary>📑 목차</summary><div id="tocl"></div></details>
+    <article class="md" id="mdbox"><p style="color:var(--sub)">노트 여는 중…</p></article>${nav}`;
+  let n;
+  try { n = (await loadNotes(sid))[cid]; } catch { $("#mdbox").innerHTML = "<p>노트를 불러오지 못했어요. 새로고침해 주세요.</p>"; return; }
   const el = $("#mdbox"); el.innerHTML = md(n); mathify(el);
+  const hs = [...el.querySelectorAll("h1,h2,h3")];
+  hs.forEach((h, k) => h.id = "h" + k);
+  $("#tocl").innerHTML = hs.filter(h => h.tagName !== "H1").map(h => `<a class="${h.tagName.toLowerCase()}" href="javascript:void 0" onclick="document.getElementById('${h.id}').scrollIntoView({behavior:'smooth'});document.getElementById('toc').open=false">${esc(h.textContent)}</a>`).join("");
+}
+
+function viewLib(sel){
+  const S = [...DATA.subjects].sort((a,b) => examDate(a) - examDate(b));
+  const cur = S.find(s => s.id === sel) || S.find(s => ((DATA.notesAvailable||{})[s.id]||[]).length) || S[0];
+  $("#view").innerHTML = `
+    <div class="sectionh"><h2>📚 정리본</h2><span>과목을 고르고 강의를 누르면 바로 열려요</span></div>
+    <div class="libtabs">${S.map(s => { const n = ((DATA.notesAvailable||{})[s.id]||[]).length;
+      return `<button class="${s.id === cur.id ? "on" : ""}" style="--c:${s.color}" onclick="location.hash='#/lib/${s.id}'">${esc(s.abbr)}<small>${n}</small></button>`; }).join("")}</div>
+    <div class="liblist" style="--c:${cur.color}">${cur.chapters.filter(c => !c.lab).map(c => {
+      const has = hasNote(cur.id, c.id);
+      return `<button class="libitem ${has ? "" : "off"}" ${has ? `onclick="location.hash='#/n/${cur.id}/${encodeURIComponent(c.id)}'"` : "disabled"}>
+        <span class="no">${esc(c.id)}</span><span class="tt">${esc(c.title)}</span>
+        <span class="st">${has ? "열기 →" : c.noted ? "사이트 업로드 전" : "정리 전"}</span></button>`; }).join("")}
+    </div>`;
 }
 
 function viewPlan(){
