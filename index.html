@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>2026 가을 기말 공부 계획</title>
+<style>
+  :root{
+    --bg:#f6f5f1; --card:#ffffff; --ink:#1d1d1f; --sub:#6b6b70; --line:#e6e4dd;
+    --accent:#3d5afe; --warn:#d9480f; --ok:#2b8a3e;
+    --pl:#7cc96b; --sp:#f2a65a; --m2:#4fc8c4; --dg:#f4b183; --ph:#ef8a8a; --pk:#7ec8e3; --ss:#f19cb4;
+  }
+  @media (prefers-color-scheme: dark){
+    :root{ --bg:#141416; --card:#1d1d21; --ink:#f2f2f4; --sub:#a0a0a8; --line:#2c2c32; }
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:-apple-system,"Pretendard","Apple SD Gothic Neo","Malgun Gothic",sans-serif;line-height:1.6}
+  .wrap{max-width:920px;margin:0 auto;padding:32px 18px 64px}
+  header h1{font-size:1.7rem;margin:0 0 4px}
+  header p{margin:0;color:var(--sub);font-size:.95rem}
+  section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px;margin-top:18px}
+  h2{font-size:1.15rem;margin:0 0 14px}
+  h3{font-size:1rem;margin:18px 0 6px}
+  .dday{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .exam{border-radius:12px;padding:12px 14px;border:1px solid var(--line);position:relative;overflow:hidden}
+  .exam::before{content:"";position:absolute;left:0;top:0;bottom:0;width:5px;background:var(--c)}
+  .exam .name{font-weight:700}
+  .exam .when{color:var(--sub);font-size:.82rem}
+  .exam .d{font-size:1.5rem;font-weight:800;margin-top:4px}
+  .exam.done{opacity:.45}
+  .tag{display:inline-block;font-size:.7rem;padding:1px 7px;border-radius:99px;background:var(--line);color:var(--sub);margin-left:4px;vertical-align:middle}
+  table{width:100%;border-collapse:collapse;font-size:.92rem}
+  th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--sub);font-weight:600;font-size:.82rem}
+  .bar{height:8px;border-radius:99px;background:var(--line);overflow:hidden;min-width:80px}
+  .bar span{display:block;height:100%;background:var(--c)}
+  .alert{border-left:4px solid var(--warn);background:color-mix(in srgb,var(--warn) 8%,transparent);padding:10px 14px;border-radius:8px;margin-top:12px;font-size:.92rem}
+  .phase{border-left:3px solid var(--accent);padding-left:14px;margin:14px 0}
+  .phase .range{color:var(--sub);font-size:.85rem}
+  ul{margin:6px 0;padding-left:20px}
+  li{margin:3px 0}
+  .deadline td:first-child{white-space:nowrap;font-weight:600}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:6px}
+  footer{color:var(--sub);font-size:.8rem;text-align:center;margin-top:28px}
+  @media (max-width:560px){ th,td{padding:7px 5px;font-size:.85rem} section{padding:16px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>📚 2026 가을 기말 공부 계획</h1>
+    <p>KAIST 7과목 · 기말 주간 12/14(월) – 12/18(금) · 초안 (범위 공지 후 업데이트)</p>
+  </header>
+
+  <section>
+    <h2>⏳ D-day</h2>
+    <div class="dday" id="dday"></div>
+    <div class="alert">⚠️ 화 19:00 미2 → 수 09:00 데구 → 수 13:00 PL 연속. 데구–PL 사이 쉬는 시간 80분뿐 → <b>데구·PL은 12/13까지 완성</b>.</div>
+  </section>
+
+  <section>
+    <h2>🗓️ 시험 일정</h2>
+    <table>
+      <thead><tr><th>날짜</th><th>시간</th><th>과목</th><th>기말 비중</th></tr></thead>
+      <tbody id="examTable"></tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>⏱️ 시간 분배 <span class="tag">하루 ~9h × 20일 ≈ 180h</span></h2>
+    <table>
+      <thead><tr><th>과목</th><th>시간</th><th style="width:30%">비율</th><th>이유</th></tr></thead>
+      <tbody id="alloc"></tbody>
+    </table>
+    <p style="color:var(--sub);font-size:.88rem;margin-bottom:0">하루 운영: 주력 2과목(각 3–4h) + 가벼운 1과목(1–2h)</p>
+  </section>
+
+  <section>
+    <h2>🧭 단계별 계획</h2>
+    <div class="phase">
+      <b>Phase 1 · 빈 노트 채우기 + 1회독</b> <span class="range">11/24 – 12/2 (9일)</span>
+      <ul>
+        <li>노트 없는 강의 먼저: 시프 9강~ (ECF·VM·동적 메모리 할당), 일물2 Ch30–35, 데구 Ch11·Tries·Ch12, 미2 20강~</li>
+        <li>시프 Malloc lab (12/1 마감) — 원리까지 이해하면서</li>
+        <li>PL L9–14 노트 + 영상 1회독</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <b>Phase 2 · 문제 풀이</b> <span class="range">12/3 – 12/10 (8일)</span>
+      <ul>
+        <li>PL: 기출(2020–2022 Scala) 전부 손으로</li>
+        <li>데구: HW3 + 기출 유형(트리·힙 그리기, Explain why, 연산 표 채우기), Ch1–4 복습</li>
+        <li>시프: Lab 3–5 기반 문제 + 교재 Practice Problems</li>
+        <li>미2: 교재 Exercise · 일물2: 교재 문제</li>
+      </ul>
+    </div>
+    <div class="phase">
+      <b>Phase 3 · 모의고사 + 오답</b> <span class="range">12/11 – 12/13 (3일)</span>
+      <ul>
+        <li>과목별 영어 모의고사 1세트씩, 시간 재고 → 오답 정리</li>
+        <li>PNR 2과목 최소 점검</li>
+        <li>12/13(일) 밤: 데구·PL 한 장 요약 완성</li>
+      </ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>🔥 시험 주간</h2>
+    <table>
+      <thead><tr><th>날짜</th><th>시험 전</th><th>시험 후</th></tr></thead>
+      <tbody>
+        <tr><td>12/14 월</td><td>오전: 프컴개 최종 점검</td><td>15:40~ 신시 1–2h → 미2</td></tr>
+        <tr><td>12/15 화</td><td>아침: 신시 요약</td><td>11:40–19:00 미2 실전 마무리 (~6h)<br>21:40~ 데구 요약만 보고 취침</td></tr>
+        <tr><td>12/16 수</td><td>아침: 데구 요약</td><td>11:40–13:00 점심 + PL 요약<br>15:40~ 시프 총정리</td></tr>
+        <tr><td>12/17 목</td><td>오전 ~4h: 시프 마무리</td><td>15:40~ 일물2 공식·개념, 일찍 취침</td></tr>
+        <tr><td>12/18 금</td><td>아침: 일물2 공식표</td><td>🎉 끝</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>📌 놓치면 안 되는 마감</h2>
+    <table class="deadline">
+      <tbody>
+        <tr><td>12/1 23:59</td><td>시프 Malloc lab (지각 하루 30% 감점)</td></tr>
+        <tr><td>12/3 – 12/11 23:55</td><td>데구 HW3</td></tr>
+        <tr><td>12/11 23:55</td><td>데구 Classum 질문/댓글 1개 (5점)</td></tr>
+        <tr><td>기말 당일</td><td>데구 기말 출석 사진 → KLMS 댓글 (15점)</td></tr>
+        <tr><td>계속</td><td>PL 영상 요약 제출</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>📝 범위 나오면 채울 것</h2>
+    <ul>
+      <li>과목별 기말 범위 공지 (특히 시프·미2·일물2)</li>
+      <li>프컴개·신시 PNR 통과 기준</li>
+      <li>시프 중간/기말 비율, 일물2·시프 문제 형식</li>
+    </ul>
+  </section>
+
+  <footer>마지막 업데이트: 2026-11-24</footer>
+</div>
+
+<script>
+const exams = [
+  {name:"프컴개", date:"2026-12-14T13:00", end:"15:40", w:"PNR", c:"var(--pk)", pnr:true},
+  {name:"신시",   date:"2026-12-15T09:00", end:"11:40", w:"PNR", c:"var(--ss)", pnr:true},
+  {name:"미2",    date:"2026-12-15T19:00", end:"21:40", w:"40%", c:"var(--m2)"},
+  {name:"데구",   date:"2026-12-16T09:00", end:"11:40", w:"45% · 1–15주 전 범위", c:"var(--dg)"},
+  {name:"PL",     date:"2026-12-16T13:00", end:"15:40", w:"45% · Ch9–14", c:"var(--pl)"},
+  {name:"시프",   date:"2026-12-17T13:00", end:"15:40", w:"시험 합계 80%", c:"var(--sp)"},
+  {name:"일물2",  date:"2026-12-18T09:00", end:"11:40", w:"35% · Ch29–35", c:"var(--ph)"},
+];
+const days = ["일","월","화","수","목","금","토"];
+const now = new Date();
+const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+const dd = document.getElementById("dday");
+const tb = document.getElementById("examTable");
+exams.forEach(e=>{
+  const d = new Date(e.date + ":00+09:00");
+  const day0 = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+  const diff = Math.round((day0 - today)/86400000);
+  const label = diff > 0 ? "D-" + diff : diff === 0 ? "D-DAY" : "끝";
+  const md = (d.getMonth()+1) + "/" + d.getDate() + "(" + days[d.getDay()] + ")";
+  const hm = e.date.slice(11);
+  dd.insertAdjacentHTML("beforeend",
+    `<div class="exam ${diff<0?"done":""}" style="--c:${e.c}">
+       <div class="name">${e.name}${e.pnr?'<span class="tag">PNR</span>':''}</div>
+       <div class="when">${md} ${hm}</div>
+       <div class="d">${label}</div></div>`);
+  tb.insertAdjacentHTML("beforeend",
+    `<tr><td>${md}</td><td>${hm}–${e.end}</td><td><span class="dot" style="--c:${e.c}"></span>${e.name}</td><td>${e.w}</td></tr>`);
+});
+
+const alloc = [
+  {n:"PL", h:40, c:"var(--pl)", r:"기말 45% — 기말에서 크게 끌어올려야 함. L9–14 노트 완료 → 바로 기출"},
+  {n:"시프", h:40, c:"var(--sp)", r:"9강 이후 노트 없음, 시험 2/3가 Lab → Malloc lab이 곧 시험공부"},
+  {n:"미2", h:30, c:"var(--m2)", r:"기말 40%, 서술형 → 손으로 푸는 연습"},
+  {n:"데구", h:28, c:"var(--dg)", r:"기말 45%, 전 범위. Ch5–10은 퀴즈로 한 번 봄"},
+  {n:"일물2", h:24, c:"var(--ph)", r:"35%, Ch30–35 노트 필요"},
+  {n:"프컴개", h:9, c:"var(--pk)", r:"PNR — 통과선만"},
+  {n:"신시", h:9, c:"var(--ss)", r:"PNR — 통과선만"},
+];
+const tot = alloc.reduce((s,a)=>s+a.h,0);
+const at = document.getElementById("alloc");
+alloc.forEach(a=>{
+  const p = Math.round(a.h/tot*100);
+  at.insertAdjacentHTML("beforeend",
+    `<tr><td><span class="dot" style="--c:${a.c}"></span>${a.n}</td><td>${a.h}h</td>
+     <td><div class="bar" style="--c:${a.c}"><span style="width:${p/22*100>100?100:p/22*100}%"></span></div><small style="color:var(--sub)">${p}%</small></td>
+     <td>${a.r}</td></tr>`);
+});
+</script>
+</body>
+</html>
