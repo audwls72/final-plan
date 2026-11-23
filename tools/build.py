@@ -6,6 +6,8 @@ One salt (stored in data.enc) is shared by data.enc and every notes/<sid>.enc so
   python3 tools/build.py encrypt  /tmp/content.json data.enc PW     # plaintext JSON -> data.enc (keeps existing salt)
   python3 tools/build.py notes    SID /tmp/notes_dir PW             # add/replace notes: every <chapterId>.md in dir
   python3 tools/build.py rmnote   SID CHAPTER_ID PW                 # remove one note
+  python3 tools/build.py pdf      SID FILE.pdf "제목" PW              # add/replace a PDF (id = file name without .pdf)
+  python3 tools/build.py rmpdf    SID PDF_ID PW                     # remove a PDF
   python3 tools/build.py rekey    OLD_PW NEW_PW                     # change password (new salt for everything)
 
 Run from the repo root. Never commit plaintext.
@@ -67,12 +69,39 @@ def _save_notes(sid, cur, k, salt):
     write("data.enc", seal(data, k, salt))
     print(sid, "notes:", sorted(cur))
 
+# PDFs: raw binary file = iv(12) || AES-GCM(ciphertext+tag)
+def pdf(sid, path, title, pw):
+    salt = salt_of(); k = key(pw, salt)
+    pid = os.path.splitext(os.path.basename(path))[0]
+    raw = open(path, "rb").read()
+    out = f"pdfs/{sid}/{pid}.bin"
+    os.makedirs(os.path.dirname(out), exist_ok=True)
+    iv = os.urandom(12)
+    open(out, "wb").write(iv + AESGCM(k).encrypt(iv, raw, None))
+    data = unseal("data.enc", k)
+    lst = [x for x in data.setdefault("pdfs", {}).setdefault(sid, []) if x["id"] != pid]
+    lst.append({"id": pid, "title": title, "size": len(raw), "ver": os.urandom(4).hex()})
+    data["pdfs"][sid] = sorted(lst, key=lambda x: x["id"])
+    write("data.enc", seal(data, k, salt))
+    print(sid, "pdf:", pid, f"{len(raw)/1e6:.1f}MB")
+
+def rmpdf(sid, pid, pw):
+    salt = salt_of(); k = key(pw, salt)
+    p = f"pdfs/{sid}/{pid}.bin"
+    if os.path.exists(p): os.remove(p)
+    data = unseal("data.enc", k)
+    data.setdefault("pdfs", {})[sid] = [x for x in data["pdfs"].get(sid, []) if x["id"] != pid]
+    write("data.enc", seal(data, k, salt))
+
 def rekey(old, new):
     ok = key(old, salt_of()); salt = os.urandom(16); nk = key(new, salt)
     for p in ["data.enc"] + glob.glob("notes/*.enc"):
         write(p, seal(unseal(p, ok), nk, salt))
+    for p in glob.glob("pdfs/*/*.bin"):
+        b = open(p, "rb").read(); raw = AESGCM(ok).decrypt(b[:12], b[12:], None)
+        iv = os.urandom(12); open(p, "wb").write(iv + AESGCM(nk).encrypt(iv, raw, None))
 
 if __name__ == "__main__":
     cmd, *a = sys.argv[1:]
-    {"decrypt": decrypt, "encrypt": encrypt, "notes": notes, "rmnote": rmnote, "rekey": rekey}[cmd](*a)
+    {"decrypt": decrypt, "encrypt": encrypt, "notes": notes, "rmnote": rmnote, "pdf": pdf, "rmpdf": rmpdf, "rekey": rekey}[cmd](*a)
     print(cmd, "ok")

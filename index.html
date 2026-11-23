@@ -9,6 +9,7 @@
 <script defer src="https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
 :root{
   --bg:#07080d; --bg2:#0e1019; --card:#12141f; --card2:#181b29; --line:#252a3d;
@@ -50,7 +51,7 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 @keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
 
 /* ---------- app ---------- */
-#app{display:none;max-width:1040px;margin:0 auto;padding:22px 18px 80px;position:relative}
+#app{display:none;max-width:1040px;overflow-x:auto;margin:0 auto;padding:22px 18px 80px;position:relative}
 .top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
 .brand{display:flex;align-items:center;gap:10px;cursor:pointer}
 .brand .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#06070c;
@@ -179,6 +180,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .libitem .tt{flex:1;font-weight:700;font-size:14.5px}
 .libitem .st{font-size:12px;color:var(--sub);white-space:nowrap}
 .libitem:not(.off) .st{color:var(--c);font-weight:800}
+.pdfbar{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px;color:var(--sub);font-size:13px;position:sticky;top:8px;z-index:5;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:8px 10px}
+#pdfpages{display:flex;flex-direction:column;gap:10px;min-width:100%}
+.pdfpage{background:#fff;border-radius:6px;overflow:hidden;width:100%;box-shadow:0 6px 24px rgba(0,0,0,.4)}
+.pdfpage canvas{display:block;width:100%;height:auto}
 .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(30px);opacity:0;background:var(--card2);border:1px solid var(--line);
   padding:10px 16px;border-radius:12px;font-weight:800;font-size:14px;transition:.3s;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -252,6 +257,14 @@ async function loadNotes(sid){
   const e = await (await fetch(`notes/${sid}.enc?v=${v}`)).json();
   return NOTES[sid] = await unseal(e, KEY);
 }
+const PDFS = {};
+const pdfList = sid => ((DATA.pdfs || {})[sid] || []);
+async function loadPdf(sid, p){
+  const k = sid + "/" + p.id; if (PDFS[k]) return PDFS[k];
+  const buf = new Uint8Array(await (await fetch(`pdfs/${sid}/${encodeURIComponent(p.id)}.bin?v=${p.ver}`)).arrayBuffer());
+  const pt = await crypto.subtle.decrypt({name:"AES-GCM", iv:buf.slice(0,12)}, KEY, buf.slice(12));
+  return PDFS[k] = new Uint8Array(pt);
+}
 const hasNote = (sid, cid) => ((DATA.notesAvailable || {})[sid] || []).includes(cid);
 async function openWith(key){
   const d = await unseal(ENC, key); KEY = key; return d;
@@ -322,11 +335,12 @@ function mathify(el){
 /* ---------- views ---------- */
 function route(){
   const h = location.hash.replace(/^#\/?/, "").split("/");
-  const tab = h[0] === "plan" ? "plan" : (h[0] === "lib" || h[0] === "n") ? "lib" : "home";
+  const tab = h[0] === "plan" ? "plan" : (h[0] === "lib" || h[0] === "n" || h[0] === "p") ? "lib" : "home";
   document.querySelectorAll(".tabs button").forEach(b => b.classList.toggle("on", b.dataset.t === tab));
   window.scrollTo(0, 0);
   if (h[0] === "plan") return viewPlan();
   if (h[0] === "lib") return viewLib(h[1]);
+  if (h[0] === "p" && h[1] && h[2]) return viewPdf(h[1], decodeURIComponent(h[2]));
   if (h[0] === "s" && h[1]) return viewSubject(h[1]);
   if (h[0] === "n" && h[1] && h[2]) return viewNote(h[1], decodeURIComponent(h[2]));
   viewHome();
@@ -431,13 +445,54 @@ async function viewNote(sid, cid){
   $("#tocl").innerHTML = hs.filter(h => h.tagName !== "H1").map(h => `<a class="${h.tagName.toLowerCase()}" href="javascript:void 0" onclick="document.getElementById('${h.id}').scrollIntoView({behavior:'smooth'});document.getElementById('toc').open=false">${esc(h.textContent)}</a>`).join("");
 }
 
+async function viewPdf(sid, pid){
+  const s = DATA.subjects.find(x => x.id === sid), p = pdfList(sid).find(x => x.id === pid);
+  if (!s || !p) return viewLib(sid);
+  $("#view").innerHTML = `<button class="back" onclick="location.hash='#/lib/${sid}'">← ${esc(s.abbr)} 정리본</button>
+    <div class="notehead" style="--c:${s.color}"><span class="pill" style="background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)">${esc(s.abbr)} · PDF</span><b>${esc(p.title)}</b></div>
+    <div class="pdfbar"><span id="pdfinfo">불러오는 중… (${(p.size/1e6).toFixed(1)}MB)</span>
+      <span><button class="sbtn" id="zout">−</button> <button class="sbtn" id="zin">+</button> <button class="sbtn" id="pdfdl">저장</button></span></div>
+    <div id="pdfpages"></div>`;
+  let bytes;
+  try { bytes = await loadPdf(sid, p); } catch { $("#pdfinfo").textContent = "PDF를 불러오지 못했어요. 새로고침해 주세요."; return; }
+  $("#pdfdl").onclick = () => { const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([bytes], {type:"application/pdf"})); a.download = p.id + ".pdf"; a.click(); };
+  if (!window.pdfjsLib) { $("#pdfinfo").textContent = "뷰어를 불러오지 못했어요 — '저장'으로 내려받아 보세요."; return; }
+  pdfjsLib.GlobalWorkerOptions.workerSrc = "https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js";
+  const doc = await pdfjsLib.getDocument({data: bytes.slice()}).promise;
+  const box = $("#pdfpages"); let zoom = 1;
+  $("#pdfinfo").textContent = `${doc.numPages}쪽`;
+  const first = await doc.getPage(1), vp1 = first.getViewport({scale:1});
+  const pages = [];
+  for (let i = 1; i <= doc.numPages; i++){
+    const d = document.createElement("div"); d.className = "pdfpage"; d.dataset.n = i;
+    d.style.aspectRatio = vp1.width + "/" + vp1.height; box.appendChild(d); pages.push(d);
+  }
+  const render = async d => {
+    if (d.dataset.done === String(zoom)) return; d.dataset.done = String(zoom);
+    const pg = await doc.getPage(+d.dataset.n), w = d.clientWidth, dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const vp = pg.getViewport({scale: w / pg.getViewport({scale:1}).width * dpr});
+    const c = document.createElement("canvas"); c.width = vp.width; c.height = vp.height;
+    await pg.render({canvasContext: c.getContext("2d"), viewport: vp}).promise;
+    d.innerHTML = ""; d.style.aspectRatio = vp.width + "/" + vp.height; d.appendChild(c);
+  };
+  const io = new IntersectionObserver(es => es.forEach(e => e.isIntersecting && render(e.target)), {rootMargin: "800px 0px"});
+  pages.forEach(d => io.observe(d));
+  const setZoom = z => { zoom = Math.max(1, Math.min(3, z)); box.style.width = (zoom * 100) + "%"; pages.forEach(d => { if (d.getBoundingClientRect().top < innerHeight + 800 && d.getBoundingClientRect().bottom > -800) render(d); }); };
+  $("#zin").onclick = () => setZoom(zoom + .5); $("#zout").onclick = () => setZoom(zoom - .5);
+}
+
 function viewLib(sel){
   const S = [...DATA.subjects].sort((a,b) => examDate(a) - examDate(b));
-  const cur = S.find(s => s.id === sel) || S.find(s => ((DATA.notesAvailable||{})[s.id]||[]).length) || S[0];
+  const cur = S.find(s => s.id === sel) || S.find(s => pdfList(s.id).length || ((DATA.notesAvailable||{})[s.id]||[]).length) || S[0];
   $("#view").innerHTML = `
     <div class="sectionh"><h2>📚 정리본</h2><span>과목을 고르고 강의를 누르면 바로 열려요</span></div>
-    <div class="libtabs">${S.map(s => { const n = ((DATA.notesAvailable||{})[s.id]||[]).length;
+    <div class="libtabs">${S.map(s => { const n = ((DATA.notesAvailable||{})[s.id]||[]).length + pdfList(s.id).length;
       return `<button class="${s.id === cur.id ? "on" : ""}" style="--c:${s.color}" onclick="location.hash='#/lib/${s.id}'">${esc(s.abbr)}<small>${n}</small></button>`; }).join("")}</div>
+    ${pdfList(cur.id).length ? `<div class="label" style="margin:4px 2px 8px">📄 정리 PDF</div>
+    <div class="liblist" style="--c:${cur.color};margin-bottom:18px">${pdfList(cur.id).map(p => `
+      <button class="libitem" onclick="location.hash='#/p/${cur.id}/${encodeURIComponent(p.id)}'">
+        <span class="no">PDF</span><span class="tt">${esc(p.title)}</span><span class="st">${(p.size/1e6).toFixed(1)}MB · 열기 →</span></button>`).join("")}</div>
+    <div class="label" style="margin:4px 2px 8px">📒 강의별 노트</div>` : ""}
     <div class="liblist" style="--c:${cur.color}">${cur.chapters.filter(c => !c.lab).map(c => {
       const has = hasNote(cur.id, c.id);
       return `<button class="libitem ${has ? "" : "off"}" ${has ? `onclick="location.hash='#/n/${cur.id}/${encodeURIComponent(c.id)}'"` : "disabled"}>
