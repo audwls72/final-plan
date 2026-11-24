@@ -338,8 +338,10 @@ function md(text){
   if (!window.marked) return "<pre>" + esc(text) + "</pre>";
   text = text.replace(/^::: *\{\.(\w+)(?: title="(.*)")?\} *$/gm, (m, c, t) =>
     `\n<div class="callout ${c}"><div class="ct"><b>${BOXLABEL[c] || c.toUpperCase()}</b>${t ? " " + t.replace(/\\\\/g, "\\") : ""}</div>\n\n`);
-  const M = [];
+  const M = [], C = [];
+  text = text.replace(/```[\s\S]*?```|`[^`\n]+`/g, m => { C.push(m); return "@@C" + (C.length - 1) + "@@"; });
   text = text.replace(/\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g, m => { M.push(m); return "@@M" + (M.length - 1) + "@@"; });
+  text = text.replace(/@@C(\d+)@@/g, (m, i) => C[+i]);
   text = text.replace(/\[([^\]\n]+)\]\{\.chk\}/g, '<span class="chk">$1</span>');
   text = text.replace(/^::: *$/gm, "\n</div>\n");
   let html = marked.parse(text, {gfm:true, breaks:false});
