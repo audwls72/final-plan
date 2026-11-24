@@ -1,3 +1,4 @@
+import re
 #!/usr/bin/env python3
 """FINAL QUEST site tool. All content is AES-256-GCM encrypted; key = PBKDF2-HMAC-SHA256(password, salt, 250000).
 One salt (stored in data.enc) is shared by data.enc and every notes/<sid>.enc so one key opens everything.
@@ -81,7 +82,7 @@ def pdf(sid, path, title, pw):
     data = unseal("data.enc", k)
     lst = [x for x in data.setdefault("pdfs", {}).setdefault(sid, []) if x["id"] != pid]
     lst.append({"id": pid, "title": title, "size": len(raw), "ver": os.urandom(4).hex()})
-    data["pdfs"][sid] = sorted(lst, key=lambda x: x["id"])
+    data["pdfs"][sid] = sorted(lst, key=lambda x: [int(t) if t.isdigit() else t for t in re.split(r"(\d+)", x["id"])])
     write("data.enc", seal(data, k, salt))
     print(sid, "pdf:", pid, f"{len(raw)/1e6:.1f}MB")
 

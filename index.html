@@ -269,7 +269,7 @@ async function loadNotes(sid){
   return NOTES[sid] = await unseal(e, KEY);
 }
 const PDFS = {};
-const pdfList = sid => ((DATA.pdfs || {})[sid] || []);
+const pdfList = sid => ((DATA.pdfs || {})[sid] || []).slice().sort((a, b) => a.id.localeCompare(b.id, undefined, {numeric: true}));
 async function loadPdf(sid, p){
   const k = sid + "/" + p.id; if (PDFS[k]) return PDFS[k];
   const buf = new Uint8Array(await (await fetch(`pdfs/${sid}/${encodeURIComponent(p.id)}.bin?v=${p.ver}`)).arrayBuffer());
