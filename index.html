@@ -157,6 +157,17 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .md th,.md td{border:1px solid var(--line);padding:7px 10px;text-align:left;vertical-align:top}
 .md th{background:var(--bg2);color:var(--sub);font-weight:700}
 .md input[type=checkbox]{accent-color:var(--neon);margin-right:6px}
+.md .callout{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin:14px 0;background:var(--bg2)}
+.md .callout .ct{font-weight:700;margin-bottom:6px}
+.md .callout .ct b{font-size:11px;letter-spacing:.08em;padding:2px 8px;border-radius:6px;margin-right:6px;background:var(--neon);color:#fff}
+.md .callout.thm{border:2px solid var(--neon);background:rgba(124,92,255,.08)}
+.md .callout.def{border-color:var(--neon2)} .md .callout.def .ct b{background:#0891b2}
+.md .callout.example .ct b{background:#5b6478} .md .callout.sol{border-left:4px solid #6d7bd6} .md .callout.sol .ct b{background:#6d7bd6}
+.md .callout.warn{border-color:rgba(251,146,60,.6);background:rgba(251,146,60,.07)} .md .callout.warn .ct b{background:#d9480f}
+.md .callout.intuition{border-style:dashed} .md .callout.intuition .ct b{background:#7c8bb8}
+.md .callout.note .ct b{background:#6b7280} .md .callout.erratum{border-color:#e03131} .md .callout.erratum .ct b{background:#e03131}
+.md .chk{background:rgba(244,63,94,.18);color:#fda4af;font-weight:800;padding:0 6px;border-radius:5px;font-size:.88em}
+.md .katex-display{overflow-x:auto;overflow-y:hidden;padding:4px 0}
 .empty{color:var(--sub);text-align:center;padding:30px;border:1px dashed var(--line);border-radius:var(--r);font-size:14px}
 
 .notehead{display:flex;align-items:center;gap:10px;margin:0 0 12px;flex-wrap:wrap}
@@ -322,8 +333,17 @@ function noteProg(s){ const L = s.chapters.filter(c => !c.lab); const d = L.filt
 function progress(s){ const n = s.chapters.length; const d = s.chapters.filter(c => isDone(s.id, c.id)).length; return {d, n, p: n ? Math.round(d/n*100) : 0}; }
 const esc = t => String(t).replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 function toast(t){ const el = $("#toast"); el.textContent = t; el.classList.add("show"); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove("show"), 1400); }
+const BOXLABEL = {def:"DEFINITION", thm:"★ KEY", example:"EXAMPLE", sol:"풀이", warn:"⚠ TRAP", intuition:"💡 INTUITION", note:"NOTE", erratum:"ERRATUM"};
 function md(text){
-  const html = window.marked ? marked.parse(text, {gfm:true, breaks:false}) : "<pre>" + esc(text) + "</pre>";
+  if (!window.marked) return "<pre>" + esc(text) + "</pre>";
+  text = text.replace(/^::: *\{\.(\w+)(?: title="(.*)")?\} *$/gm, (m, c, t) =>
+    `\n<div class="callout ${c}"><div class="ct"><b>${BOXLABEL[c] || c.toUpperCase()}</b>${t ? " " + t.replace(/\\\\/g, "\\") : ""}</div>\n\n`);
+  const M = [];
+  text = text.replace(/\$\$[\s\S]+?\$\$|\$[^$\n]+?\$/g, m => { M.push(m); return "@@M" + (M.length - 1) + "@@"; });
+  text = text.replace(/\[([^\]\n]+)\]\{\.chk\}/g, '<span class="chk">$1</span>');
+  text = text.replace(/^::: *$/gm, "\n</div>\n");
+  let html = marked.parse(text, {gfm:true, breaks:false});
+  html = html.replace(/@@M(\d+)@@/g, (m, i) => esc(M[+i]));
   return html;
 }
 function mathify(el){
