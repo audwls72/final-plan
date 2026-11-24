@@ -199,6 +199,72 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   padding:10px 16px;border-radius:12px;font-weight:800;font-size:14px;transition:.3s;z-index:20;box-shadow:0 10px 30px rgba(0,0,0,.5)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
+/* ---------- calendar (공략집) ---------- */
+.calhead{display:flex;justify-content:space-between;align-items:flex-end;gap:10px;flex-wrap:wrap;margin:2px 2px 12px}
+.calhead h1{font-size:22px;letter-spacing:-.01em}
+.calhead .rev{color:var(--dim);font-size:12px}
+.legend{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.legend span{font-size:11.5px;font-weight:800;padding:3px 9px;border-radius:99px;background:color-mix(in srgb,var(--c) 16%,transparent);color:var(--c);border:1px solid color-mix(in srgb,var(--c) 35%,transparent)}
+.legend span em{font-style:normal;opacity:.7;font-weight:700;margin-left:4px}
+.phases{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.phases span{font-size:11.5px;font-weight:700;color:var(--sub);display:flex;align-items:center;gap:6px}
+.phases i{width:18px;height:6px;border-radius:9px;background:var(--pc)}
+.cal{background:linear-gradient(180deg,var(--card),var(--bg2));border:1px solid var(--line);border-radius:var(--r);padding:10px}
+.calgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px}
+.dow{text-align:center;font-size:11px;font-weight:800;letter-spacing:.12em;color:var(--dim);padding:4px 0}
+.dow.sat{color:#7aa2ff}.dow.sun{color:#ff7a90}
+.cell{position:relative;min-height:112px;border-radius:12px;background:rgba(255,255,255,.02);border:1px solid var(--line);padding:6px 6px 5px;text-align:left;display:flex;flex-direction:column;gap:3px;transition:.15s;overflow:hidden}
+.cell::before{content:"";position:absolute;left:0;right:0;top:0;height:3px;background:var(--pc,transparent)}
+.cell.empty{opacity:.25;cursor:default}
+.cell:not(.empty):hover{border-color:#3a4060;transform:translateY(-2px)}
+.cell.past{opacity:.45}
+.cell.sel{border-color:var(--neon2);box-shadow:0 0 0 1px var(--neon2),0 0 22px rgba(34,211,238,.25)}
+.cell.today{border-color:var(--neon);box-shadow:0 0 0 1px var(--neon),0 0 26px rgba(124,92,255,.45)}
+.cell.boss{background:linear-gradient(180deg,rgba(244,63,94,.12),rgba(244,63,94,.02))}
+.cell .dn{display:flex;justify-content:space-between;align-items:center;font-weight:900;font-size:14px}
+.cell .dn small{font-size:9.5px;font-weight:900;letter-spacing:.08em;color:var(--neon);}
+.cell .dn .mo{font-size:10px;color:var(--sub);font-weight:800;margin-right:3px}
+.cell.sat .dn b{color:#7aa2ff}.cell.sun .dn b{color:#ff7a90}
+.cell .done{position:absolute;right:6px;bottom:5px;font-size:11px;color:var(--good);font-weight:900}
+.chip{display:block;font-size:11px;font-weight:800;line-height:1.35;padding:1px 6px;border-radius:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  background:color-mix(in srgb,var(--c) 18%,transparent);color:var(--c)}
+.chip.x{background:var(--c);color:#07080d}
+.chip.ok{text-decoration:line-through;opacity:.55}
+.flag{font-size:10.5px;font-weight:800;color:var(--warn);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.flag.end{color:var(--good)}
+.daycard{margin-top:14px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:18px}
+.daycard .dh{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+.daycard .dh h2{font-size:19px}
+.daycard .dh .ph{font-size:11.5px;font-weight:800;padding:3px 10px;border-radius:99px;background:color-mix(in srgb,var(--pc) 18%,transparent);color:var(--pc)}
+.daycard .meter{display:flex;height:8px;border-radius:9px;overflow:hidden;background:var(--bg2);margin:4px 0 14px}
+.daycard .meter i{display:block;height:100%;background:var(--c)}
+.task{display:flex;gap:12px;align-items:flex-start;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:var(--bg2);margin-top:8px;width:100%;text-align:left;transition:.15s}
+.task:hover{border-color:var(--c)}
+.task .bx{width:22px;height:22px;flex:none;border-radius:7px;border:2px solid var(--c);display:grid;place-items:center;font-size:13px;font-weight:900;color:#07080d;margin-top:1px}
+.task.ok .bx{background:var(--c)}
+.task.ok .tx{opacity:.5;text-decoration:line-through}
+.task .tx{flex:1;font-size:14.5px}
+.task .tx b{color:var(--c);margin-right:6px}
+.task .tx small{display:block;color:var(--dim);font-size:12px;font-weight:700}
+.task .hr{font-size:12px;font-weight:800;color:var(--sub);white-space:nowrap}
+.task.exam{background:linear-gradient(90deg,color-mix(in srgb,var(--c) 22%,transparent),transparent);border-color:color-mix(in srgb,var(--c) 50%,transparent);cursor:default}
+.task.exam .bx{border:0;font-size:18px}
+.dflag{margin-top:8px;padding:9px 12px;border-radius:12px;font-size:13.5px;font-weight:800;background:rgba(251,146,60,.1);color:var(--warn);border:1px solid rgba(251,146,60,.3)}
+.dflag.end{background:rgba(74,222,128,.1);color:var(--good);border-color:rgba(74,222,128,.3)}
+.navbtns{display:flex;gap:6px}
+.navbtns button{padding:6px 11px;border-radius:10px;border:1px solid var(--line);background:var(--bg2);font-size:13px;font-weight:800;color:var(--sub)}
+.navbtns button:hover{color:var(--ink)}
+.plansep{margin:26px 2px 12px;font-size:15px;letter-spacing:.08em}
+@media (max-width:720px){
+  .calgrid{gap:3px}.cal{padding:6px}
+  .cell{min-height:74px;padding:4px 3px 3px;border-radius:9px;gap:2px}
+  .cell .dn{font-size:12px}.cell .dn small{display:none}.cell .dn .mo{display:none}
+  .chip{font-size:9px;padding:0 3px;border-radius:4px}
+  .chip .h{display:none}
+  .flag{font-size:0;height:5px;width:5px;border-radius:9px;background:var(--warn)}
+  .cell .done{font-size:9px;right:3px;bottom:2px}
+}
+
 @media (max-width:720px){
   .hero,.two{grid-template-columns:1fr}
   .next .big{font-size:46px}
@@ -523,10 +589,77 @@ function viewLib(sel){
     </div>`;
 }
 
+const LS_CAL = "fq-cal";
+const PHC = {1:"#22d3ee", 2:"#7c5cff", 3:"#fb923c", 4:"#f43f5e"};
+const ymd = dt => `${dt.getFullYear()}-${String(dt.getMonth()+1).padStart(2,"0")}-${String(dt.getDate()).padStart(2,"0")}`;
+const pd = s => { const [y,m,d] = s.split("-").map(Number); return new Date(y, m-1, d); };
+const calDone = () => store.get(LS_CAL, {});
+let CALSEL = null;
+
 function viewPlan(){
-  $("#view").innerHTML = `<article class="md" id="mdbox"><h1>📘 공략집 — 기말 공부 계획</h1></article>`;
+  const C = DATA.calendar;
+  if (!C) { $("#view").innerHTML = `<article class="md" id="mdbox"><h1>📘 공략집 — 기말 공부 계획</h1></article>`; const el = $("#mdbox"); el.insertAdjacentHTML("beforeend", md(DATA.plan)); mathify(el); return; }
+  const S = Object.fromEntries(DATA.subjects.map(s => [s.id, s]));
+  const byDate = Object.fromEntries(C.days.map(x => [x.d, x]));
+  const first = pd(C.days[0].d), last = pd(C.days[C.days.length-1].d);
+  const today = ymd(new Date());
+  if (!CALSEL || !byDate[CALSEL]) CALSEL = byDate[today] ? today : (today < C.days[0].d ? C.days[0].d : C.days[C.days.length-1].d);
+  // grid from Monday on/before (first - 2 days) to Sunday on/after last
+  const g0 = new Date(Math.min(first, pd(today) < first && (first - pd(today)) < 7*864e5 ? pd(today) : first));
+  g0.setDate(g0.getDate() - ((g0.getDay() + 6) % 7));
+  const g1 = new Date(last); g1.setDate(g1.getDate() + (7 - g1.getDay()) % 7);
+  const tot = {}; C.days.forEach(x => x.items.forEach(i => { if (!i.exam) tot[i.s] = (tot[i.s]||0) + i.h; }));
+  const dn = calDone();
+  let cells = "";
+  for (let dt = new Date(g0); dt <= g1; dt.setDate(dt.getDate() + 1)) {
+    const k = ymd(dt), x = byDate[k], wd = dt.getDay();
+    const cls = (wd === 6 ? " sat" : wd === 0 ? " sun" : "");
+    const mo = (dt.getDate() === 1 || k === ymd(g0)) ? `<span class="mo">${dt.getMonth()+1}월</span>` : "";
+    if (!x) { cells += `<div class="cell empty${cls}${k === today ? " today" : ""}"><div class="dn"><b>${mo}${dt.getDate()}</b></div></div>`; continue; }
+    const boss = x.items.some(i => i.exam);
+    const tasks = x.items.map((i, n) => ({i, n})).filter(o => !o.i.exam);
+    const allok = tasks.length && tasks.every(o => dn[k + "#" + o.n]);
+    cells += `<button class="cell${cls}${boss ? " boss" : ""}${k < today ? " past" : ""}${k === today ? " today" : ""}${k === CALSEL ? " sel" : ""}" style="--pc:${PHC[x.ph]}" onclick="CALSEL='${k}';viewPlan()">
+      <div class="dn"><b>${mo}${dt.getDate()}</b>${k === today ? "<small>TODAY</small>" : ""}</div>
+      ${x.items.map((i, n) => { const s = S[i.s] || {abbr:i.s, color:"#888"};
+        return i.exam ? `<span class="chip x" style="--c:${s.color}"><span class="h">🔥 </span>${esc(s.abbr)}</span>`
+                      : `<span class="chip${dn[k+"#"+n] ? " ok" : ""}" style="--c:${s.color}">${esc(s.abbr)}<span class="h"> ${i.h}h</span></span>`; }).join("")}
+      ${(x.flags||[]).map(f => `<span class="flag ${f.k}">⚑ ${esc(f.t)}</span>`).join("")}
+      ${allok ? '<span class="done">✓</span>' : ""}
+    </button>`;
+  }
+  const x = byDate[CALSEL], sd = pd(CALSEL);
+  const idx = C.days.findIndex(y => y.d === CALSEL);
+  const hsum = x.items.reduce((a, i) => a + (i.exam ? 0 : i.h), 0);
+  const order = DATA.subjects.map(s => s.id).filter(id => tot[id]);
+  $("#view").innerHTML = `
+    <div class="calhead"><h1>📅 D-DAY 캘린더</h1><span class="rev">${esc(C.rev || "")}</span></div>
+    <div class="phases">${Object.entries(C.phases).map(([n, t]) => `<span style="--pc:${PHC[n]}"><i></i>${n < 4 ? "Phase " + n + " · " : ""}${esc(t)}</span>`).join("")}</div>
+    <div class="legend">${order.map(id => `<span style="--c:${S[id].color}">${esc(S[id].abbr)}<em>${tot[id]}h</em></span>`).join("")}</div>
+    <div class="cal"><div class="calgrid">
+      ${["월","화","수","목","금","토","일"].map((w, n) => `<div class="dow${n === 5 ? " sat" : n === 6 ? " sun" : ""}">${w}</div>`).join("")}
+      ${cells}
+    </div></div>
+    <div class="daycard">
+      <div class="dh">
+        <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap"><h2>${sd.getMonth()+1}/${sd.getDate()} (${DAYS[sd.getDay()]})${CALSEL === today ? " · 오늘의 퀘스트" : ""}</h2>
+          <span class="ph" style="--pc:${PHC[x.ph]}">${x.ph < 4 ? "Phase " + x.ph + " · " : ""}${esc(C.phases[x.ph])}</span>
+          ${hsum ? `<span style="color:var(--sub);font-size:13px;font-weight:700">⏱ ${hsum}h</span>` : ""}</div>
+        <div class="navbtns"><button ${idx <= 0 ? "disabled" : ""} onclick="CALSEL='${C.days[Math.max(0, idx-1)].d}';viewPlan()">◀</button><button onclick="CALSEL=null;viewPlan()">오늘</button><button ${idx >= C.days.length-1 ? "disabled" : ""} onclick="CALSEL='${C.days[Math.min(C.days.length-1, idx+1)].d}';viewPlan()">▶</button></div>
+      </div>
+      ${hsum ? `<div class="meter">${x.items.filter(i => !i.exam).map(i => `<i style="--c:${(S[i.s]||{}).color};width:${i.h/hsum*100}%"></i>`).join("")}</div>` : ""}
+      ${(x.flags||[]).map(f => `<div class="dflag ${f.k}">⚑ ${esc(f.t)}</div>`).join("")}
+      ${x.items.map((i, n) => { const s = S[i.s] || {abbr:i.s, color:"#888"}; const ok = dn[CALSEL + "#" + n];
+        return i.exam
+          ? `<div class="task exam" style="--c:${s.color}"><span class="bx">🔥</span><span class="tx"><b>BOSS</b>${esc(i.t)}</span></div>`
+          : `<button class="task${ok ? " ok" : ""}" style="--c:${s.color}" onclick="calToggle('${CALSEL}#${n}')"><span class="bx">${ok ? "✓" : ""}</span>
+             <span class="tx"><b>${esc(s.abbr)}</b>${esc(i.t)}${i.w ? `<small>${esc(i.w)}</small>` : ""}</span><span class="hr">${i.h}h</span></button>`; }).join("")}
+    </div>
+    <h2 class="plansep">📜 전략 노트</h2>
+    <article class="md" id="mdbox"></article>`;
   const el = $("#mdbox"); el.insertAdjacentHTML("beforeend", md(DATA.plan)); mathify(el);
 }
+function calToggle(k){ const d = calDone(); if (d[k]) delete d[k]; else { d[k] = 1; toast("퀘스트 클리어! +XP"); } store.set(LS_CAL, d); const y = scrollY; viewPlan(); scrollTo(0, y); }
 
 window.addEventListener("load", boot);
 </script>
