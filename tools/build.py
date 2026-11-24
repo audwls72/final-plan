@@ -14,6 +14,8 @@ Run from the repo root. Never commit plaintext.
 """
 import re
 import base64, glob, json, os, sys
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from mdfix import fix as mdfix
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from cryptography.hazmat.primitives.ciphers.aead import AESGCM
@@ -53,7 +55,7 @@ def notes(sid, mddir, pw):
     path = f"notes/{sid}.enc"
     cur = unseal(path, k) if os.path.exists(path) else {}
     for f in sorted(glob.glob(os.path.join(mddir, "*.md"))):
-        cur[os.path.splitext(os.path.basename(f))[0]] = open(f, encoding="utf-8").read()
+        cur[os.path.splitext(os.path.basename(f))[0]] = mdfix(open(f, encoding="utf-8").read())
     _save_notes(sid, cur, k, salt)
 
 def rmnote(sid, cid, pw):

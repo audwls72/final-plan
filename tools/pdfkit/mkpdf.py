@@ -11,16 +11,20 @@ for a in ["subject", "code", "prof", "abbr", "color", "exam", "label"]: ap.add_a
 A = ap.parse_args()
 HERE = os.path.dirname(os.path.abspath(__file__))
 
-src = open(A.md, encoding="utf-8").read()
+sys.path.insert(0, os.path.dirname(HERE))
+from mdfix import fix as mdfix
+src = mdfix(open(A.md, encoding="utf-8").read())
 title_line = re.search(r"^# (.+)$", src, re.M)
 title = title_line.group(1) if title_line else os.path.basename(A.md)
 src = src.replace(title_line.group(0), "", 1) if title_line else src
 # strip "과목 L13 — " prefix for the big cover title
 short = re.sub(r"^.*?—\s*", "", title)
+short = re.sub(r"^\[[^\]]+\]\s*\d+\.?\s*", "", short)
 
 def inline(t):
     t = html.escape(t)
     t = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", t)
+    t = re.sub(r"&lt;(/?)strong&gt;", r"<\1b>", t)
     return t
 
 # display-formula lines: a paragraph made only of lines indented by exactly 2 spaces
@@ -29,7 +33,7 @@ i = 0
 while i < len(lines):
     ln = lines[i]
     prev_blank = (i == 0) or lines[i - 1].strip() == ""
-    if prev_blank and re.match(r"^  \S", ln) and not re.match(r"^  ([-*+]|\d+\.)\s", ln):
+    if prev_blank and re.match(r"^  \S", ln) and not re.match(r"^  (([-*+]|\d+\.)\s|\|)", ln):
         block = []
         while i < len(lines) and re.match(r"^  \S", lines[i]):
             block.append(lines[i].strip()); i += 1
@@ -65,7 +69,10 @@ body = re.sub(r"<li>⚠️", '<li class="warn">⚠️', body)
 heads = []
 def hd(m):
     lvl, inner = m.group(1), m.group(3)
-    n = len(heads); heads.append((lvl, re.sub("<[^>]+>", "", inner)))
+    n = len(heads)
+    toc = re.sub(r"<annotation.*?</annotation>", "", inner, flags=re.S)
+    toc = re.sub(r"<(?!/?(math|mrow|mi|mo|mn|msub|msup|msubsup|mfrac|msqrt|mtext|mover|munder|semantics|mspace)\b)[^>]+>", "", toc)
+    heads.append((lvl, toc))
     return f'<h{lvl} id="h{n}">{inner}<span class="mk">QQH{n}QQ</span></h{lvl}>'
 body = re.sub(r"<h([23])(?: [^>]*)?()>(.*?)</h\1>", hd, body, flags=re.S)
 # section bands for h2: checklist / glossary special classes
@@ -84,7 +91,7 @@ body = re.sub(r'<input type="checkbox" disabled="" />', '<span class="cb"></span
 
 def build(pages):
     toc = "".join(
-        f'<div class="t{l}"><a href="#h{k}">{html.escape(html.unescape(t))}</a><span class="dots"></span><span class="pg">{pages.get(k, "")}</span></div>'
+        f'<div class="t{l}"><a href="#h{k}">{t}</a><span class="dots"></span><span class="pg">{pages.get(k, "")}</span></div>'
         for k, (l, t) in enumerate(heads))
     return open(os.path.join(HERE, "template.html"), encoding="utf-8").read().format(
         color=A.color, subject=html.escape(A.subject), code=A.code, prof=html.escape(A.prof), abbr=html.escape(A.abbr),
