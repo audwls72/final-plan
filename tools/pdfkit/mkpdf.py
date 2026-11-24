@@ -84,7 +84,7 @@ body = re.sub(r'<input type="checkbox" disabled="" />', '<span class="cb"></span
 
 def build(pages):
     toc = "".join(
-        f'<div class="t{l}"><a href="#h{k}">{html.escape(t)}</a><span class="dots"></span><span class="pg">{pages.get(k, "")}</span></div>'
+        f'<div class="t{l}"><a href="#h{k}">{html.escape(html.unescape(t))}</a><span class="dots"></span><span class="pg">{pages.get(k, "")}</span></div>'
         for k, (l, t) in enumerate(heads))
     return open(os.path.join(HERE, "template.html"), encoding="utf-8").read().format(
         color=A.color, subject=html.escape(A.subject), code=A.code, prof=html.escape(A.prof), abbr=html.escape(A.abbr),
