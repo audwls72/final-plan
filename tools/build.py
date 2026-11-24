@@ -1,4 +1,3 @@
-import re
 #!/usr/bin/env python3
 """FINAL QUEST site tool. All content is AES-256-GCM encrypted; key = PBKDF2-HMAC-SHA256(password, salt, 250000).
 One salt (stored in data.enc) is shared by data.enc and every notes/<sid>.enc so one key opens everything.
@@ -13,6 +12,7 @@ One salt (stored in data.enc) is shared by data.enc and every notes/<sid>.enc so
 
 Run from the repo root. Never commit plaintext.
 """
+import re
 import base64, glob, json, os, sys
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
