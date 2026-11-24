@@ -41,6 +41,9 @@ def _inline(text):
             inner = inner.strip()
         maths.append("$" + inner + "$"); return f"\x00M{len(maths)-1}\x00"
     text = MATH.sub(mfix, text)
+    # 짝이 안 맞는 '***굵게**' (여는 별 3개, 닫는 별 2개) → '**굵게**'
+    if text.count("***") == 1 and not re.search(r"\*\*\*\s*$", text):
+        text = text.replace("***", "**", 1)
     text = BOLD.sub(lambda m: "<strong>" + m.group(1).strip() + "</strong>", text)
     text = re.sub(r"\x00M(\d+)\x00", lambda m: maths[int(m.group(1))], text)
     text = re.sub(r"\x00C(\d+)\x00", lambda m: codes[int(m.group(1))], text)

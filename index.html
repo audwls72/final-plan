@@ -56,10 +56,10 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 .brand{display:flex;align-items:center;gap:10px;cursor:pointer}
 .brand .logo{width:38px;height:38px;border-radius:12px;display:grid;place-items:center;font-weight:900;color:#06070c;
   background:linear-gradient(135deg,var(--neon),var(--neon2));box-shadow:0 0 24px rgba(124,92,255,.5)}
-.brand b{font-size:17px;letter-spacing:.06em}
+.brand b{font-size:17px;letter-spacing:.06em;white-space:nowrap}
 .brand small{display:block;color:var(--sub);font-size:11px;letter-spacing:.12em;margin-top:-3px}
 .tabs{display:flex;gap:4px;background:var(--card);border:1px solid var(--line);padding:4px;border-radius:12px}
-.tabs button{padding:7px 14px;border-radius:9px;font-size:13px;font-weight:700;color:var(--sub)}
+.tabs button{padding:7px 14px;border-radius:9px;font-size:13px;font-weight:700;color:var(--sub);white-space:nowrap}
 .tabs button.on{background:var(--card2);color:var(--ink);box-shadow:inset 0 0 0 1px var(--line)}
 .iconbtn{width:36px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--sub);font-size:15px}
 
@@ -272,6 +272,11 @@ button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
   .md{padding:18px;font-size:14.5px}
   .tabs button{padding:7px 10px}
   .brand small{display:none}
+  .top{gap:8px}
+}
+@media (max-width:460px){
+  .brand>div:last-child{display:none}
+  .tabs button{padding:7px 11px;font-size:12.5px}
 }
 </style>
 </head>
