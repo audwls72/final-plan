@@ -13,7 +13,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 
 sys.path.insert(0, os.path.dirname(HERE))
 from mdfix import fix as mdfix
-src = mdfix(open(A.md, encoding="utf-8").read())
+from texify import convert as texify
+src = mdfix(texify(open(A.md, encoding="utf-8").read()))
 title_line = re.search(r"^# (.+)$", src, re.M)
 title = title_line.group(1) if title_line else os.path.basename(A.md)
 src = src.replace(title_line.group(0), "", 1) if title_line else src
@@ -37,7 +38,7 @@ while i < len(lines):
         block = []
         while i < len(lines) and re.match(r"^  \S", lines[i]):
             block.append(lines[i].strip()); i += 1
-        out.append('<div class="eq">' + "<br>".join(inline(b) for b in block) + "</div>")
+        out += ["", "::: eq", " \\\n".join(block), ":::", ""]
         continue
     out.append(ln); i += 1
 md = "\n".join(out)

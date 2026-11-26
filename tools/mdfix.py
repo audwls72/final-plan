@@ -37,7 +37,8 @@ def _inline(text):
     maths = []
     def mfix(m):
         inner = m.group(1)
-        if "\\" in inner or re.search(r"[\^_{}]", inner) or re.fullmatch(r"\s*[=≈<>+\-−×·]+\s*", inner):
+        if "\\" in inner or re.search(r"[\^_{}]", inner) or re.fullmatch(r"\s*[=≈<>+\-−×·]+\s*", inner) \
+                or (re.match(r"\s*[=≈<>]|.*[=≈<>+]\s*$", inner) and not re.search(r"\d{1,3},\d{3}", inner)):
             inner = inner.strip()
         maths.append("$" + inner + "$"); return f"\x00M{len(maths)-1}\x00"
     text = MATH.sub(mfix, text)
